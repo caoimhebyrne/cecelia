@@ -1,11 +1,19 @@
 pub struct Stream<T> {
-    pub elements: Vec<T>,
-    pub index: usize,
+    elements: Vec<T>,
+    index: usize,
+
+    /// Used for keeping track of the current position in the input
+    /// This can be modified by the lexer to keep track of the current line and column
+    pub visual_index: usize,
 }
 
 impl<T: Clone> Stream<T> {
     pub fn new(elements: Vec<T>) -> Self {
-        Stream { elements, index: 0 }
+        Stream {
+            elements,
+            index: 0,
+            visual_index: 0,
+        }
     }
 
     pub fn peek(&self) -> Option<T> {
@@ -17,6 +25,7 @@ impl<T: Clone> Stream<T> {
 
         if self.index < self.elements.len() {
             self.index += 1;
+            self.visual_index += 1;
         }
 
         element

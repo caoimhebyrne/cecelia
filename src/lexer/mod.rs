@@ -35,6 +35,8 @@ impl Lexer {
 
                 '\n' => {
                     self.line += 1;
+                    self.stream.visual_index = 0;
+
                     continue;
                 }
 
@@ -151,7 +153,7 @@ impl Lexer {
     }
 
     fn position(&self) -> Position {
-        Position::new(self.stream.index, self.line)
+        Position::new(self.stream.visual_index, self.line)
     }
 
     fn token(&self, token_type: TokenType) -> Token {
