@@ -11,6 +11,7 @@ pub struct LexerError {
 
 pub enum LexerErrorType {
     UnexpectedCharacter(char),
+    InvalidNumber(String),
 }
 
 impl Display for LexerErrorType {
@@ -18,6 +19,10 @@ impl Display for LexerErrorType {
         match self {
             LexerErrorType::UnexpectedCharacter(char) => {
                 write!(f, "Unexpected character: `{}`", char)
+            }
+
+            LexerErrorType::InvalidNumber(string) => {
+                write!(f, "Invalid number: `{}`", string)
             }
         }
     }

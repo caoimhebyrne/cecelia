@@ -55,11 +55,7 @@ impl Lexer {
                     if char.is_alphabetic() {
                         self.parse_identifier(char)
                     } else if char.is_numeric() {
-                        if let Some(token) = self.parse_number(char) {
-                            token
-                        } else {
-                            continue;
-                        }
+                        self.parse_number(char)?
                     } else {
                         return Err(LexerError::new(
                             LexerErrorType::UnexpectedCharacter(char),
@@ -102,7 +98,7 @@ impl Lexer {
         Token::new(token_type, self.position())
     }
 
-    fn parse_number(&mut self, char: char) -> Option<Token> {
+    fn parse_number(&mut self, char: char) -> Result<Token, LexerError> {
         let mut number_string = String::new();
         number_string.push(char);
 
@@ -119,10 +115,16 @@ impl Lexer {
             }
         }
 
-        number_string
-            .parse::<i32>()
-            .ok()
-            .map(|value| Token::new(TokenType::IntegerLiteral(value), self.position()))
+        match number_string.parse::<i32>() {
+            Ok(value) => Ok(Token::new(
+                TokenType::IntegerLiteral(value),
+                self.position(),
+            )),
+            Err(_) => Err(LexerError::new(
+                LexerErrorType::InvalidNumber(number_string),
+                self.position(),
+            )),
+        }
     }
 
     fn skip_until(&mut self, until: char) {
