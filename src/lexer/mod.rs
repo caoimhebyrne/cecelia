@@ -1,11 +1,11 @@
+pub mod error;
 pub mod token;
-pub use token::*;
 
 use crate::Stream;
-use colored::Colorize;
+use error::*;
+use token::*;
 
 pub struct Lexer {
-    input: String,
     stream: Stream<char>,
     line: usize,
 }
@@ -13,13 +13,12 @@ pub struct Lexer {
 impl Lexer {
     pub fn new(input: String) -> Self {
         Lexer {
-            input: input.clone(),
             stream: input.chars().collect::<Vec<char>>().into(),
             line: 0,
         }
     }
 
-    pub fn parse(&mut self) -> Option<Vec<Token>> {
+    pub fn parse(&mut self) -> Result<Vec<Token>, LexerError> {
         let mut tokens = vec![];
 
         loop {
@@ -62,8 +61,10 @@ impl Lexer {
                             continue;
                         }
                     } else {
-                        self.print_error(format!("Unexpected character: `{}`", char));
-                        return None;
+                        return Err(LexerError::new(
+                            LexerErrorType::UnexpectedCharacter(char),
+                            self.position(),
+                        ));
                     }
                 }
             };
@@ -71,26 +72,7 @@ impl Lexer {
             tokens.push(token);
         }
 
-        Some(tokens)
-    }
-
-    fn print_error(&self, message: String) {
-        let mut position = self.position();
-        position.next_char();
-
-        let line = self.input.lines().nth(position.y).unwrap();
-        let line_number = position.y + 1;
-
-        println!(
-            "{}",
-            format!("Error at line {} column {}: ", line_number, position.x)
-                .red()
-                .bold()
-        );
-
-        println!("{}", line.white());
-        println!("{}", format!("{}^", " ".repeat(position.x - 1)).bold());
-        println!("{}{}\n", " ".repeat(position.x - 1), message.bold())
+        Ok(tokens)
     }
 
     fn parse_identifier(&mut self, first_char: char) -> Token {
@@ -152,6 +134,6 @@ impl Lexer {
     }
 
     fn position(&self) -> Position {
-        Position::new(self.stream.index - 1, self.line)
+        Position::new(self.stream.index, self.line)
     }
 }

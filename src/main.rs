@@ -48,10 +48,9 @@ fn main() -> Result<(), std::io::Error> {
 fn lex(input: String) {
     let mut lexer = Lexer::new(input.clone());
     let tokens = lexer.parse();
-    if let Some(tokens) = tokens {
-        println!("{:#?}", tokens);
-    } else {
-        exit(-1);
+    match tokens {
+        Ok(value) => println!("{:#?}", value),
+        Err(error) => error.print_error(input),
     }
 }
 
