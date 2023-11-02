@@ -27,11 +27,11 @@ impl Lexer {
             };
 
             let token = match char {
-                '=' => Token::new(TokenType::Equals, self.position()),
-                '+' => Token::new(TokenType::Plus, self.position()),
-                '-' => Token::new(TokenType::Minus, self.position()),
-                '*' => Token::new(TokenType::Asterisk, self.position()),
-                ':' => Token::new(TokenType::Colon, self.position()),
+                '=' => self.token(TokenType::Equals),
+                '+' => self.token(TokenType::Plus),
+                '-' => self.token(TokenType::Minus),
+                '*' => self.token(TokenType::Asterisk),
+                ':' => self.token(TokenType::Colon),
 
                 '\n' => {
                     self.line += 1;
@@ -45,7 +45,7 @@ impl Lexer {
                         continue;
                     } else {
                         // ... but still emit a slash token for single `/` characters
-                        Token::new(TokenType::Slash, self.position())
+                        self.token(TokenType::Slash)
                     }
                 }
 
@@ -57,10 +57,7 @@ impl Lexer {
                     } else if char.is_numeric() {
                         self.parse_number(char)?
                     } else {
-                        return Err(LexerError::new(
-                            LexerErrorType::UnexpectedCharacter(char),
-                            self.position(),
-                        ));
+                        return Err(self.error(LexerErrorType::UnexpectedCharacter(char)));
                     }
                 }
             };
@@ -95,7 +92,7 @@ impl Lexer {
             _ => TokenType::Identifier(identifier),
         };
 
-        Token::new(token_type, self.position())
+        self.token(token_type)
     }
 
     fn parse_number(&mut self, char: char) -> Result<Token, LexerError> {
@@ -115,16 +112,10 @@ impl Lexer {
             }
         }
 
-        match number_string.parse::<i32>() {
-            Ok(value) => Ok(Token::new(
-                TokenType::IntegerLiteral(value),
-                self.position(),
-            )),
-            Err(_) => Err(LexerError::new(
-                LexerErrorType::InvalidNumber(number_string),
-                self.position(),
-            )),
-        }
+        number_string
+            .parse::<i32>()
+            .map(|value| self.token(TokenType::IntegerLiteral(value)))
+            .map_err(|_| self.error(LexerErrorType::InvalidNumber(number_string)))
     }
 
     fn skip_until(&mut self, until: char) {
@@ -137,5 +128,13 @@ impl Lexer {
 
     fn position(&self) -> Position {
         Position::new(self.stream.index, self.line)
+    }
+
+    fn token(&self, token_type: TokenType) -> Token {
+        Token::new(token_type, self.position())
+    }
+
+    fn error(&self, error_type: LexerErrorType) -> LexerError {
+        LexerError::new(error_type, self.position())
     }
 }
