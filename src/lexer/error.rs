@@ -11,6 +11,7 @@ pub struct LexerError {
 
 pub enum LexerErrorType {
     UnexpectedCharacter(char),
+    ExpectedCharacter(char),
     InvalidNumber(String),
 }
 
@@ -23,6 +24,10 @@ impl Display for LexerErrorType {
 
             LexerErrorType::InvalidNumber(string) => {
                 write!(f, "Invalid number: `{}`", string)
+            }
+
+            LexerErrorType::ExpectedCharacter(char) => {
+                write!(f, "Expected character: `{}`", char)
             }
         }
     }

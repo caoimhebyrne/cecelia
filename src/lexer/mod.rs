@@ -38,6 +38,8 @@ impl Lexer {
                     continue;
                 }
 
+                '"' => self.parse_string()?,
+
                 '/' => {
                     // Ignore comments...
                     if let Some('/') = self.stream.peek() {
@@ -93,6 +95,28 @@ impl Lexer {
         };
 
         self.token(token_type)
+    }
+
+    fn parse_string(&mut self) -> Result<Token, LexerError> {
+        let mut result_string = String::new();
+
+        loop {
+            let Some(char) = self.stream.consume() else {
+                return Err(self.error(LexerErrorType::ExpectedCharacter('"')));
+            };
+
+            if char == '\n' {
+                return Err(self.error(LexerErrorType::ExpectedCharacter('"')));
+            }
+
+            if char == '"' {
+                break;
+            } else {
+                result_string.push(char);
+            }
+        }
+
+        Ok(self.token(TokenType::StringLiteral(result_string)))
     }
 
     fn parse_number(&mut self, char: char) -> Result<Token, LexerError> {
