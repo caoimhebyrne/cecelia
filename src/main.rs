@@ -1,12 +1,11 @@
 pub mod lexer;
-use colored::Colorize;
-pub use lexer::*;
-
 pub mod stream;
-pub use stream::*;
 
 use clap::{Parser, Subcommand};
+use colored::Colorize;
+use lexer::*;
 use std::{fs, process::exit};
+use stream::*;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
