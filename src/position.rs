@@ -17,4 +17,8 @@ impl Position {
         self.x = 0;
         self.y += 1;
     }
+
+    pub fn previous_char(&mut self) {
+        self.x = self.x.saturating_sub(1);
+    }
 }

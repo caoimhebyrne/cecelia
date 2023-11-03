@@ -42,6 +42,7 @@ impl ASTError {
 pub enum ASTErrorType {
     UnableToParse(TokenType),
     UnableToParseValue(TokenType),
+    UnknownTypeIdentifier(String),
     ExpectedToken(TokenType),
     ExpectedTokenButGot(TokenType, TokenType),
     UnexpectedEOF,
@@ -53,6 +54,9 @@ impl Display for ASTErrorType {
             ASTErrorType::UnableToParse(token) => write!(f, "Unable to parse: {:?}", token),
             ASTErrorType::UnableToParseValue(token) => {
                 write!(f, "Unable to parse a value from: {:?}", token)
+            }
+            ASTErrorType::UnknownTypeIdentifier(identifier) => {
+                write!(f, "Unknown type identifier: {}", identifier)
             }
             ASTErrorType::ExpectedToken(token) => write!(f, "Expected token {:?}", token),
             ASTErrorType::ExpectedTokenButGot(expected, actual) => {

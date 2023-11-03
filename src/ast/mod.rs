@@ -76,6 +76,88 @@ impl AST {
 
     // let <identifier>: <type?> = <expression>
     pub fn parse_let_statement(&mut self, position: Position) -> Result<Node, ASTError> {
+        let (identifier, identifier_position) = self.expect_identifier(position.clone())?;
+
+        let value_type = match self.tokens.peek() {
+            Some(token) if token.token_type == TokenType::Colon => {
+                self.tokens.consume();
+                self.parse_type_identifier(token.position)?
+            }
+            _ => Type::Unresolved(None),
+        };
+
+        let equals_token = self.expect_equals(identifier_position)?;
+        let value = self.parse_value(equals_token.position)?;
+
+        let node_type = NodeType::LetStatement {
+            identifier,
+            value_type,
+            value,
+        };
+
+        Ok(Node::new(node_type, position))
+    }
+
+    fn parse_return_statement(&mut self, position: Position) -> Result<Node, ASTError> {
+        let value = self.parse_value(position.clone()).unwrap_or(Value::None);
+        let node_type = NodeType::ReturnStatement {
+            value_type: match value {
+                Value::None => Type::None,
+                _ => Type::Unresolved(None),
+            },
+            value,
+        };
+
+        Ok(Node::new(node_type, position))
+    }
+
+    fn parse_type_identifier(&mut self, position: Position) -> Result<Type, ASTError> {
+        let Some(token) = self.tokens.consume() else {
+            return Err(ASTError::new(
+                ASTErrorType::ExpectedToken(TokenType::Identifier("any".into())),
+                position,
+            ));
+        };
+
+        let identifier = match token.token_type {
+            TokenType::Identifier(identifier) => identifier,
+            _ => {
+                let mut position = token.position.clone();
+                position.previous_char();
+
+                return Err(ASTError::new(
+                    ASTErrorType::ExpectedToken(TokenType::Identifier("any".into())),
+                    position,
+                ));
+            }
+        };
+
+        Ok(match identifier.as_str() {
+            "String" => Type::String,
+            "Integer" => Type::Integer,
+            _ => Type::Unresolved(Some(identifier)),
+        })
+    }
+
+    fn expect_equals(&mut self, position: Position) -> Result<Token, ASTError> {
+        let Some(token) = self.tokens.consume() else {
+            return Err(ASTError::new(
+                ASTErrorType::ExpectedToken(TokenType::Equals),
+                position,
+            ));
+        };
+
+        if token.token_type != TokenType::Equals {
+            return Err(ASTError::new(
+                ASTErrorType::ExpectedTokenButGot(TokenType::Equals, token.token_type),
+                token.position,
+            ));
+        }
+
+        Ok(token)
+    }
+
+    fn expect_identifier(&mut self, position: Position) -> Result<(String, Position), ASTError> {
         let Some(maybe_identifier) = self.tokens.consume() else {
             return Err(ASTError::new(
                 ASTErrorType::ExpectedToken(TokenType::Identifier("any".into())),
@@ -96,50 +178,6 @@ impl AST {
             }
         };
 
-        let value_type = Type::Unresolved;
-        match self.tokens.peek() {
-            Some(token) if token.token_type == TokenType::Colon => {
-                self.tokens.consume();
-                // TODO: Parse type
-                println!("TODO: Parse type")
-            }
-            _ => {}
-        }
-
-        let Some(maybe_equals) = self.tokens.consume() else {
-            return Err(ASTError::new(
-                ASTErrorType::ExpectedToken(TokenType::Equals),
-                maybe_identifier.position,
-            ));
-        };
-
-        if maybe_equals.token_type != TokenType::Equals {
-            return Err(ASTError::new(
-                ASTErrorType::ExpectedTokenButGot(TokenType::Equals, maybe_equals.token_type),
-                maybe_equals.position,
-            ));
-        }
-
-        let value = self.parse_value(maybe_equals.position)?;
-        let node_type = NodeType::LetStatement {
-            identifier,
-            value_type,
-            value,
-        };
-
-        Ok(Node::new(node_type, position))
-    }
-
-    fn parse_return_statement(&mut self, position: Position) -> Result<Node, ASTError> {
-        let value = self.parse_value(position.clone()).unwrap_or(Value::None);
-        let node_type = NodeType::ReturnStatement {
-            value_type: match value {
-                Value::None => Type::None,
-                _ => Type::Unresolved,
-            },
-            value,
-        };
-
-        Ok(Node::new(node_type, position))
+        Ok((identifier, maybe_identifier.position))
     }
 }
