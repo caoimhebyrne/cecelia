@@ -1,7 +1,7 @@
 pub mod error;
 pub mod token;
 
-use crate::Stream;
+use crate::{position::Position, Stream};
 use error::*;
 use token::*;
 
