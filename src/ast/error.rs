@@ -9,12 +9,15 @@ pub struct ASTError {
     pub position: Position,
 }
 
+impl<T> From<ASTError> for Result<T, ASTError> {
+    fn from(error: ASTError) -> Self {
+        Err(error)
+    }
+}
+
 impl ASTError {
     pub fn new(error_type: ASTErrorType, position: Position) -> Self {
-        Self {
-            error_type,
-            position,
-        }
+        Self { error_type, position }
     }
 
     pub fn print_error(&self, input: String) {
@@ -24,18 +27,12 @@ impl ASTError {
 
         eprintln!(
             "{}",
-            format!("Error at line {} column {}: ", line_number, self.position.x)
-                .red()
-                .bold()
+            format!("Error at line {} column {}: ", line_number, self.position.x).red().bold()
         );
 
         eprintln!("{}", line.white());
         eprintln!("{}", format!("{}^", " ".repeat(column)).bold());
-        eprintln!(
-            "{}{}\n",
-            " ".repeat(column),
-            format!("{}", self.error_type).bold()
-        )
+        eprintln!("{}{}\n", " ".repeat(column), format!("{}", self.error_type).bold())
     }
 }
 

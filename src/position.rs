@@ -21,4 +21,10 @@ impl Position {
     pub fn previous_char(&mut self) {
         self.x = self.x.saturating_sub(1);
     }
+
+    pub fn as_previous(self) -> Self {
+        let mut copy = self.clone();
+        copy.previous_char();
+        copy
+    }
 }

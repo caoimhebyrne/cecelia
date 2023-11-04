@@ -38,7 +38,7 @@ impl Lexer {
                     self.stream.visual_index = 0;
 
                     continue;
-                }
+                },
 
                 '"' => self.parse_string()?,
 
@@ -51,7 +51,7 @@ impl Lexer {
                         // ... but still emit a slash token for single `/` characters
                         self.token(TokenType::Slash)
                     }
-                }
+                },
 
                 ' ' => continue,
 
@@ -63,7 +63,7 @@ impl Lexer {
                     } else {
                         return Err(self.error(LexerErrorType::UnexpectedCharacter(char)));
                     }
-                }
+                },
             };
 
             tokens.push(token);

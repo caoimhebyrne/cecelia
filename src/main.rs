@@ -35,7 +35,7 @@ fn main() -> Result<(), std::io::Error> {
         None => {
             eprintln!("{}: No input file specified!", "error".red());
             exit(-1);
-        }
+        },
     };
 
     match args.command {
@@ -66,7 +66,7 @@ fn parse(input: String) {
                 Ok(value) => println!("{:#?}", value),
                 Err(error) => error.print_error(input),
             }
-        }
+        },
         Err(error) => error.print_error(input),
     }
 }

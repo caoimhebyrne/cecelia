@@ -1,31 +1,24 @@
 use crate::position::Position;
 
-use super::{r#type::Type, value::Value};
+use super::expression::{Expression, ExpressionType};
 
 #[derive(Debug)]
-pub struct Node {
-    pub node_type: NodeType,
+pub enum Node {
+    // let x<: Type?> = <Expression>
+    LetStatement(Position, Identifier, Option<ExpressionType>, Expression),
+
+    // return <Expression?>
+    ReturnStatement(Position, Option<Expression>),
+}
+
+#[derive(Debug, Clone)]
+pub struct Identifier {
     pub position: Position,
+    pub value: String,
 }
 
-impl Node {
-    pub fn new(node_type: NodeType, position: Position) -> Self {
-        Self {
-            node_type,
-            position,
-        }
+impl Identifier {
+    pub fn new(position: Position, value: String) -> Self {
+        Self { position, value }
     }
-}
-
-#[derive(Debug)]
-pub enum NodeType {
-    LetStatement {
-        identifier: String,
-        value_type: Type,
-        value: Value,
-    },
-    ReturnStatement {
-        value_type: Type,
-        value: Value,
-    },
 }

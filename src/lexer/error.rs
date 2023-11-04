@@ -20,15 +20,15 @@ impl Display for LexerErrorType {
         match self {
             LexerErrorType::UnexpectedCharacter(char) => {
                 write!(f, "Unexpected character: `{}`", char)
-            }
+            },
 
             LexerErrorType::InvalidNumber(string) => {
                 write!(f, "Invalid number: `{}`", string)
-            }
+            },
 
             LexerErrorType::ExpectedCharacter(char) => {
                 write!(f, "Expected character: `{}`", char)
-            }
+            },
         }
     }
 }
@@ -48,9 +48,7 @@ impl LexerError {
 
         eprintln!(
             "{}",
-            format!("Error at line {} column {}: ", line_number, self.position.x)
-                .red()
-                .bold()
+            format!("Error at line {} column {}: ", line_number, self.position.x).red().bold()
         );
 
         eprintln!("{}", line.white());

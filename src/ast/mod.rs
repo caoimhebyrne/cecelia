@@ -1,7 +1,6 @@
 mod error;
+mod expression;
 mod node;
-mod r#type;
-mod value;
 
 use crate::{
     lexer::token::{Keyword, Token, TokenType},
@@ -9,12 +8,9 @@ use crate::{
     stream::Stream,
 };
 
-use error::ASTError;
-use node::Node;
-use r#type::Type;
-use value::Value;
-
-use self::{error::ASTErrorType, node::NodeType};
+use error::{ASTError, ASTErrorType};
+use expression::{Expression, ExpressionType};
+use node::{Identifier, Node};
 
 pub struct AST {
     tokens: Stream<Token>,
@@ -22,9 +18,7 @@ pub struct AST {
 
 impl AST {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Self {
-            tokens: tokens.into(),
-        }
+        Self { tokens: tokens.into() }
     }
 
     pub fn parse(&mut self) -> Result<Vec<Node>, ASTError> {
@@ -40,12 +34,7 @@ impl AST {
                 TokenType::Keyword(Keyword::Let) => self.parse_let_statement(position)?,
                 TokenType::Keyword(Keyword::Return) => self.parse_return_statement(position)?,
 
-                _ => {
-                    return Err(ASTError::new(
-                        ASTErrorType::UnableToParse(token.token_type),
-                        position,
-                    ))
-                }
+                _ => return ASTError::new(ASTErrorType::UnableToParse(token.token_type), position).into(),
             };
 
             nodes.push(node);
@@ -54,21 +43,16 @@ impl AST {
         Ok(nodes)
     }
 
-    pub fn parse_value(&mut self, position: Position) -> Result<Value, ASTError> {
+    pub fn parse_expression(&mut self, position: Position) -> Result<Expression, ASTError> {
         let Some(token) = self.tokens.consume() else {
-            return Err(ASTError::new(ASTErrorType::UnexpectedEOF, position));
+            return ASTError::new(ASTErrorType::UnexpectedEOF, position).into();
         };
 
         let value = match token.token_type {
-            TokenType::IntegerLiteral(value) => Value::IntegerLiteral(value),
-            TokenType::StringLiteral(value) => Value::StringLiteral(value),
+            TokenType::IntegerLiteral(value) => Expression::IntegerLiteral(value),
+            TokenType::StringLiteral(value) => Expression::StringLiteral(value),
 
-            _ => {
-                return Err(ASTError::new(
-                    ASTErrorType::UnableToParseValue(token.token_type),
-                    token.position,
-                ))
-            }
+            _ => return ASTError::new(ASTErrorType::UnableToParseValue(token.token_type), token.position).into(),
         };
 
         Ok(value)
@@ -76,108 +60,90 @@ impl AST {
 
     // let <identifier>: <type?> = <expression>
     pub fn parse_let_statement(&mut self, position: Position) -> Result<Node, ASTError> {
-        let (identifier, identifier_position) = self.expect_identifier(position.clone())?;
+        let identifier = self.expect_identifier(position.clone())?;
 
         let value_type = match self.tokens.peek() {
             Some(token) if token.token_type == TokenType::Colon => {
                 self.tokens.consume();
-                self.parse_type_identifier(token.position)?
-            }
-            _ => Type::Unresolved(None),
+                self.parse_type_identifier(token.position).ok()
+            },
+            _ => None,
         };
 
-        let equals_token = self.expect_equals(identifier_position)?;
-        let value = self.parse_value(equals_token.position)?;
+        let equals_token = self.expect_equals(identifier.position.clone())?;
+        let value = self.parse_expression(equals_token.position)?;
 
-        let node_type = NodeType::LetStatement {
-            identifier,
-            value_type,
-            value,
-        };
-
-        Ok(Node::new(node_type, position))
+        Ok(Node::LetStatement(position, identifier, value_type, value))
     }
 
     fn parse_return_statement(&mut self, position: Position) -> Result<Node, ASTError> {
-        let value = self.parse_value(position.clone()).unwrap_or(Value::None);
-        let node_type = NodeType::ReturnStatement {
-            value_type: match value {
-                Value::None => Type::None,
-                _ => Type::Unresolved(None),
-            },
-            value,
-        };
-
-        Ok(Node::new(node_type, position))
+        let value = self.parse_expression(position.clone()).ok();
+        Ok(Node::ReturnStatement(position, value))
     }
 
-    fn parse_type_identifier(&mut self, position: Position) -> Result<Type, ASTError> {
+    fn parse_type_identifier(&mut self, position: Position) -> Result<ExpressionType, ASTError> {
         let Some(token) = self.tokens.consume() else {
-            return Err(ASTError::new(
+            return ASTError::new(
                 ASTErrorType::ExpectedToken(TokenType::Identifier("any".into())),
                 position,
-            ));
+            )
+            .into();
         };
 
         let identifier = match token.token_type {
             TokenType::Identifier(identifier) => identifier,
             _ => {
-                let mut position = token.position.clone();
-                position.previous_char();
-
-                return Err(ASTError::new(
+                return ASTError::new(
                     ASTErrorType::ExpectedToken(TokenType::Identifier("any".into())),
-                    position,
-                ));
-            }
+                    token.position.as_previous(),
+                )
+                .into();
+            },
         };
 
         Ok(match identifier.as_str() {
-            "String" => Type::String,
-            "Integer" => Type::Integer,
-            _ => Type::Unresolved(Some(identifier)),
+            "String" => ExpressionType::String,
+            "Integer" => ExpressionType::Integer,
+            _ => ExpressionType::Unresolved(identifier),
         })
     }
 
     fn expect_equals(&mut self, position: Position) -> Result<Token, ASTError> {
         let Some(token) = self.tokens.consume() else {
-            return Err(ASTError::new(
-                ASTErrorType::ExpectedToken(TokenType::Equals),
-                position,
-            ));
+            return ASTError::new(ASTErrorType::ExpectedToken(TokenType::Equals), position).into();
         };
 
         if token.token_type != TokenType::Equals {
-            return Err(ASTError::new(
+            return ASTError::new(
                 ASTErrorType::ExpectedTokenButGot(TokenType::Equals, token.token_type),
                 token.position,
-            ));
+            )
+            .into();
         }
 
         Ok(token)
     }
 
-    fn expect_identifier(&mut self, position: Position) -> Result<(String, Position), ASTError> {
-        let Some(maybe_identifier) = self.tokens.consume() else {
-            return Err(ASTError::new(
+    fn expect_identifier(&mut self, position: Position) -> Result<Identifier, ASTError> {
+        let Some(token) = self.tokens.consume() else {
+            return ASTError::new(
                 ASTErrorType::ExpectedToken(TokenType::Identifier("any".into())),
                 position,
-            ));
+            )
+            .into();
         };
 
-        let identifier = match maybe_identifier.token_type {
+        let value = match token.token_type {
             TokenType::Identifier(identifier) => identifier,
             _ => {
-                return Err(ASTError::new(
-                    ASTErrorType::ExpectedTokenButGot(
-                        TokenType::Identifier("any".into()),
-                        maybe_identifier.token_type,
-                    ),
-                    maybe_identifier.position,
-                ))
-            }
+                return ASTError::new(
+                    ASTErrorType::ExpectedTokenButGot(TokenType::Identifier("any".into()), token.token_type),
+                    token.position,
+                )
+                .into()
+            },
         };
 
-        Ok((identifier, maybe_identifier.position))
+        Ok(Identifier::new(token.position, value))
     }
 }
