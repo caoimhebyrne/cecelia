@@ -92,7 +92,10 @@ fn check(input: String) {
                     let mut resolver = TypeResolver::default();
                     let resolved = resolver.visit_statements(value);
                     match resolved {
-                        Ok(value) => println!("{:#?}", value),
+                        Ok(_values) => println!(
+                            "{}: resolved types and checked for errors",
+                            "success".to_string().green(),
+                        ),
                         Err(error) => error.print_error(input),
                     }
                 },
