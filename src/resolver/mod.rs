@@ -6,15 +6,17 @@ pub use crate::visitor::*;
 
 use crate::{
     ast::{Expression, Identifier, Statement},
+    interpreter::function::BuiltinFunctions,
     position::Position,
     r#type::Type,
     Error, ErrorType,
 };
 
 /// Resolves any unresolved or uninferred types.
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct TypeResolver {
     variables: HashMap<Identifier, Type>,
+    builtin_functions: BuiltinFunctions,
 }
 
 impl StatementVisitor<Statement> for TypeResolver {
@@ -93,17 +95,53 @@ impl ExpressionVisitor<Expression> for TypeResolver {
             },
 
             Expression::FunctionCall {
-                identifier,
-                arguments,
-                r#type,
-            } => Ok(Expression::FunctionCall {
-                identifier,
-                arguments: arguments
-                    .iter()
-                    .map(|it| self.visit_expression(it.clone()))
-                    .collect::<Result<Vec<_>, _>>()?,
-                r#type,
-            }),
+                identifier, arguments, ..
+            } => {
+                // Resolve the types of any expressions passed as arguments.
+                let mut expressions = Vec::new();
+                for argument in arguments {
+                    expressions.push(self.visit_expression(argument)?);
+                }
+
+                // TODO: Add support for code-defined functions.
+                let function = self.builtin_functions.get(&identifier.name).ok_or(Error::new(
+                    ErrorType::UnknownFunction(identifier.name.clone()),
+                    identifier.position,
+                ))?;
+
+                // Ensure that the number of arguments matches the number of arguments the function takes.
+                if expressions.len() != function.arguments().len() {
+                    return Err(Error::new(
+                        ErrorType::InvalidNumberOfArguments(function.arguments().len(), expressions.len()),
+                        identifier.position,
+                    ));
+                }
+
+                // Ensure that the types of the arguments match the types of the arguments the function takes.
+                for (index, expression) in expressions.iter().enumerate() {
+                    // This is safe because we already checked that the number of arguments matches the number of arguments the function takes.
+                    let expected_type = function.arguments().get(index).unwrap().clone();
+                    let actual_type = expression.r#type();
+
+                    // If the expected type is `Any`, then we can skip the type check.
+                    if expected_type == Type::Any {
+                        continue;
+                    }
+
+                    if actual_type != expected_type {
+                        return Err(Error::new(
+                            ErrorType::TypeMismatch(actual_type, expected_type),
+                            identifier.position,
+                        ));
+                    }
+                }
+
+                Ok(Expression::FunctionCall {
+                    identifier,
+                    arguments: expressions,
+                    r#type: function.return_type(),
+                })
+            },
         }
     }
 }

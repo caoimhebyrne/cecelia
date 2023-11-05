@@ -34,6 +34,8 @@ pub enum ErrorType {
     UnknownVariable(String),
     UnknownFunction(String),
     UnableToInferType,
+
+    InvalidNumberOfArguments(usize, usize),
 }
 
 impl Display for ErrorType {
@@ -111,6 +113,14 @@ impl Display for ErrorType {
 
             ErrorType::UnableToInferType => {
                 write!(f, "Unable to infer type")
+            },
+
+            ErrorType::InvalidNumberOfArguments(expected, actual) => {
+                write!(
+                    f,
+                    "Invalid number of arguments: expected {} but got {}",
+                    expected, actual
+                )
             },
         }
     }

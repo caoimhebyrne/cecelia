@@ -1,2 +1,2 @@
 let message = "Hello, World!"
-print(message + " This was appended to the end of the `message`!")
+print(message)

@@ -1,3 +1,4 @@
+pub mod function;
 pub mod value;
 
 use std::collections::HashMap;
@@ -7,11 +8,13 @@ use crate::{
     resolver::{ExpressionVisitor, StatementVisitor},
     Error, ErrorType,
 };
+use function::*;
 use value::*;
 
 #[derive(Default)]
 pub struct Interpreter {
     variables: HashMap<Identifier, Value>,
+    builtin_functions: BuiltinFunctions,
 }
 
 impl Interpreter {
@@ -92,30 +95,20 @@ impl ExpressionVisitor<Value> for Interpreter {
             Expression::FunctionCall {
                 identifier, arguments, ..
             } => {
-                // TODO: Allow for custom functions.
-
-                let mut evaluated_arguments = Vec::new();
-                for argument in arguments {
-                    evaluated_arguments.push(self.visit_expression(argument)?);
+                // Evaluate the values to be passed to the function.
+                let mut values = Vec::new();
+                for argument in &arguments {
+                    values.push(self.visit_expression(argument.clone())?);
                 }
 
-                // If the function is not a built-in function, throw an error.
-                if identifier.name != "print" {
-                    return Err(Error::new(
-                        ErrorType::UnknownFunction(identifier.name),
-                        identifier.position,
-                    ));
-                }
+                // Look up the function in the functions map.
+                let function = self.builtin_functions.get(&identifier.name).ok_or(Error::new(
+                    ErrorType::UnknownFunction(identifier.name.clone()),
+                    identifier.position,
+                ))?;
 
-                let mut output_string = String::new();
-
-                for argument in evaluated_arguments {
-                    output_string.push_str(&argument.to_string());
-                }
-
-                println!("{}", output_string);
-
-                Value::Void
+                // At this point, the typechecker should have ensured that the types of the arguments match the types of the parameters.
+                function.call(values)
             },
         };
 
