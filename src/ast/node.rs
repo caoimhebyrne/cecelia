@@ -1,3 +1,5 @@
+use std::hash::Hash;
+
 use crate::{lexer::TokenType, position::Position, r#type::Type};
 
 /// The different types of statements that can be parsed.
@@ -28,13 +30,27 @@ pub enum Statement {
 }
 
 /// Represents the name of a variable, function, etc.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Eq)]
 pub struct Identifier {
     /// The name of the identifier.
     pub name: String,
 
     // The position of the identifier in the source code.
     pub position: Position,
+}
+
+/// We can compare identifiers by their name, not their position.
+impl PartialEq for Identifier {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+    }
+}
+
+/// We can hash identifiers by their name, not their position.
+impl Hash for Identifier {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+    }
 }
 
 impl Identifier {
