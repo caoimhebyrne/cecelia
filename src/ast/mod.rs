@@ -27,19 +27,24 @@ impl AST {
         let mut statements = vec![];
 
         loop {
-            let Some(token) = self.tokens.consume() else {
+            let Some(token) = self.tokens.peek() else {
                 break;
             };
 
             let statement = match token.token_type {
-                TokenType::Keyword(Keyword::Let) => self.parse_let_statement(token.position)?,
-                TokenType::Keyword(Keyword::Return) => self.parse_return_statement(token.position)?,
+                TokenType::Keyword(Keyword::Let) => {
+                    self.tokens.consume();
+                    self.parse_let_statement(token.position)?
+                },
+
+                TokenType::Keyword(Keyword::Return) => {
+                    self.tokens.consume();
+                    self.parse_return_statement(token.position)?
+                },
 
                 _ => {
-                    return Err(Error::new(
-                        ErrorType::UnableToParseStatement(token.token_type),
-                        token.position,
-                    ))
+                    let expression = self.parse_expression(token.position)?;
+                    Statement::Expression(expression)
                 },
             };
 

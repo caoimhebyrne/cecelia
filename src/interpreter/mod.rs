@@ -46,6 +46,11 @@ impl StatementVisitor<()> for Interpreter {
                 let value = value.map(|it| self.visit_expression(it)).transpose()?;
                 Err(Error::new(ErrorType::Return(value), position))
             },
+
+            Statement::Expression(expression) => {
+                self.visit_expression(expression)?;
+                Ok(())
+            },
         }
     }
 }

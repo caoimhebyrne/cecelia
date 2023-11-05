@@ -31,6 +31,11 @@ impl StatementVisitor<Statement> for TypeResolver {
                 let value = value.map(|value| self.visit_expression(value)).transpose()?;
                 Ok(Statement::Return { value, position })
             },
+
+            Statement::Expression(expression) => {
+                let expression = self.visit_expression(expression)?;
+                Ok(Statement::Expression(expression))
+            },
         }
     }
 }

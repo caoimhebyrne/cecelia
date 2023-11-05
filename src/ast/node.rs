@@ -27,6 +27,9 @@ pub enum Statement {
         /// The position of the return statement in the source code.
         position: Position,
     },
+
+    /// A statement that wraps an expression.
+    Expression(Expression),
 }
 
 /// Represents the name of a variable, function, etc.
