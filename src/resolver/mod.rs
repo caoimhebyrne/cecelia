@@ -58,7 +58,7 @@ impl TypeResolver {
         // If the type is unresolved, and can be resolved, resolve it.
         let mut resolved_type = Self::resolve_type(r#type, position)?;
 
-        // If the type is still unresolved, infer it from the value.
+        // If the type is unresolvable, infer it from the value.
         if let Type::Unresolved(None) = resolved_type {
             resolved_type = value.r#type();
         }
