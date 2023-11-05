@@ -1,8 +1,6 @@
-pub mod error;
 pub mod token;
 
-use crate::{position::Position, Stream};
-use error::*;
+use crate::{position::Position, Error, ErrorType, Stream};
 use token::*;
 
 pub struct Lexer {
@@ -18,7 +16,7 @@ impl Lexer {
         }
     }
 
-    pub fn parse(&mut self) -> Result<Vec<Token>, LexerError> {
+    pub fn parse(&mut self) -> Result<Vec<Token>, Error> {
         let mut tokens = vec![];
 
         loop {
@@ -61,7 +59,7 @@ impl Lexer {
                     } else if char.is_numeric() {
                         self.parse_number(char)?
                     } else {
-                        return Err(self.error(LexerErrorType::UnexpectedCharacter(char)));
+                        return Err(self.error(ErrorType::UnexpectedCharacter(char)));
                     }
                 },
             };
@@ -99,16 +97,16 @@ impl Lexer {
         self.token(token_type)
     }
 
-    fn parse_string(&mut self) -> Result<Token, LexerError> {
+    fn parse_string(&mut self) -> Result<Token, Error> {
         let mut result_string = String::new();
 
         loop {
             let Some(char) = self.stream.consume() else {
-                return Err(self.error(LexerErrorType::ExpectedCharacter('"')));
+                return Err(self.error(ErrorType::ExpectedCharacter('"')));
             };
 
             if char == '\n' {
-                return Err(self.error(LexerErrorType::ExpectedCharacter('"')));
+                return Err(self.error(ErrorType::ExpectedCharacter('"')));
             }
 
             if char == '"' {
@@ -121,7 +119,7 @@ impl Lexer {
         Ok(self.token(TokenType::StringLiteral(result_string)))
     }
 
-    fn parse_number(&mut self, char: char) -> Result<Token, LexerError> {
+    fn parse_number(&mut self, char: char) -> Result<Token, Error> {
         let mut number_string = String::new();
         number_string.push(char);
 
@@ -141,7 +139,7 @@ impl Lexer {
         number_string
             .parse::<i32>()
             .map(|value| self.token(TokenType::IntegerLiteral(value)))
-            .map_err(|_| self.error(LexerErrorType::InvalidNumber(number_string)))
+            .map_err(|_| self.error(ErrorType::InvalidNumber(number_string)))
     }
 
     fn skip_until(&mut self, until: char) {
@@ -160,7 +158,7 @@ impl Lexer {
         Token::new(token_type, self.position())
     }
 
-    fn error(&self, error_type: LexerErrorType) -> LexerError {
-        LexerError::new(error_type, self.position())
+    fn error(&self, error_type: ErrorType) -> Error {
+        Error::new(error_type, self.position())
     }
 }

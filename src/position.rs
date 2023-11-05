@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Copy)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -23,7 +23,7 @@ impl Position {
     }
 
     pub fn as_previous(self) -> Self {
-        let mut copy = self.clone();
+        let mut copy = self;
         copy.previous_char();
         copy
     }

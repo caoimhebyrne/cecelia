@@ -2,43 +2,40 @@ use std::fmt::Display;
 
 use colored::Colorize;
 
-use crate::lexer::Position;
+use crate::position::Position;
 
-pub struct LexerError {
-    pub lexer_error_type: LexerErrorType,
+pub struct Error {
+    pub error_type: ErrorType,
     pub position: Position,
 }
 
-pub enum LexerErrorType {
+pub enum ErrorType {
     UnexpectedCharacter(char),
     ExpectedCharacter(char),
     InvalidNumber(String),
 }
 
-impl Display for LexerErrorType {
+impl Display for ErrorType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            LexerErrorType::UnexpectedCharacter(char) => {
-                write!(f, "Unexpected character: `{}`", char)
+            ErrorType::UnexpectedCharacter(char) => {
+                write!(f, "Unexpected character: {}", char)
             },
 
-            LexerErrorType::InvalidNumber(string) => {
+            ErrorType::InvalidNumber(string) => {
                 write!(f, "Invalid number: `{}`", string)
             },
 
-            LexerErrorType::ExpectedCharacter(char) => {
-                write!(f, "Expected character: `{}`", char)
+            ErrorType::ExpectedCharacter(char) => {
+                write!(f, "Expected character: {}", char)
             },
         }
     }
 }
 
-impl LexerError {
-    pub fn new(lexer_error_type: LexerErrorType, position: Position) -> Self {
-        Self {
-            lexer_error_type,
-            position,
-        }
+impl Error {
+    pub fn new(error_type: ErrorType, position: Position) -> Self {
+        Self { error_type, position }
     }
 
     pub fn print_error(&self, input: String) {
@@ -53,10 +50,6 @@ impl LexerError {
 
         eprintln!("{}", line.white());
         eprintln!("{}", format!("{}^", " ".repeat(column)).bold());
-        eprintln!(
-            "{}{}\n",
-            " ".repeat(column),
-            format!("{}", self.lexer_error_type).bold()
-        )
+        eprintln!("{}{}\n", " ".repeat(column), format!("{}", self.error_type).bold())
     }
 }
