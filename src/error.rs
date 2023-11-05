@@ -30,6 +30,8 @@ pub enum ErrorType {
     VariableAlreadyDeclared(String),
     InvalidBinaryOperation(Value, Operator, Value),
     Return(Option<Value>),
+
+    UnknownVariable(String),
 }
 
 impl Display for ErrorType {
@@ -95,6 +97,10 @@ impl Display for ErrorType {
 
             ErrorType::Return(_) => {
                 write!(f, "INTERAL WORKAROUND")
+            },
+
+            ErrorType::UnknownVariable(name) => {
+                write!(f, "`{}` has not been declared yet.", name)
             },
         }
     }

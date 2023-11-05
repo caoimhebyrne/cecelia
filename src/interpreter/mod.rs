@@ -73,7 +73,16 @@ impl ExpressionVisitor<Value> for Interpreter {
                 ))?
             },
 
-            _ => todo!("Implement interpreter for {:?} expressions", expression),
+            Expression::Identifier(.., identifier) => {
+                // Look up the variable in the variables map.
+                self.variables
+                    .get(&identifier)
+                    .ok_or(Error::new(
+                        ErrorType::UnableToResolveType(identifier.clone().name),
+                        identifier.position,
+                    ))?
+                    .clone()
+            },
         };
 
         Ok(value)

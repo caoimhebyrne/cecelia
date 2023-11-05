@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+
+use colored::Colorize;
+
 pub use crate::visitor::*;
 
 use crate::{
@@ -9,7 +13,9 @@ use crate::{
 
 /// Resolves any unresolved or uninferred types.
 #[derive(Debug, Default)]
-pub struct TypeResolver {}
+pub struct TypeResolver {
+    variables: HashMap<Identifier, Type>,
+}
 
 impl StatementVisitor<Statement> for TypeResolver {
     fn visit_statement(&mut self, statement: Statement) -> Result<Statement, Error> {
@@ -47,7 +53,6 @@ impl ExpressionVisitor<Expression> for TypeResolver {
                 let right_type = self.visit_expression(*right.clone())?.r#type();
 
                 // Ensure that the type of the value matches the type of the variable.
-                // TODO: We could have a way to coerce types / support using a binary operator on different types.
                 if left_type != right_type {
                     return Err(Error::new(ErrorType::TypeMismatch(left_type, right_type), position));
                 }
@@ -61,10 +66,25 @@ impl ExpressionVisitor<Expression> for TypeResolver {
                 })
             },
 
-            Expression::Identifier(r#type, identifier) => {
-                // If the type is unresolved, and can be resolved, resolve it.
-                let resolved_type = Self::resolve_type(r#type.clone(), identifier.position)?;
-                Ok(Expression::Identifier(resolved_type, identifier.clone()))
+            Expression::Identifier(.., identifier) => {
+                // Identifiers have no type attached to them, so we need to look up the type in the variables map.
+                let resolved_type = self
+                    .variables
+                    .get(&identifier)
+                    .ok_or(Error::new(
+                        ErrorType::UnknownVariable(identifier.clone().name),
+                        identifier.position,
+                    ))?
+                    .clone();
+
+                println!(
+                    "{}: resolved type of `{}` to `{:?}`",
+                    "info(resolver)".blue(),
+                    identifier.name,
+                    resolved_type
+                );
+
+                Ok(Expression::Identifier(resolved_type, identifier))
             },
         }
     }
@@ -96,6 +116,8 @@ impl TypeResolver {
                 position,
             ));
         }
+
+        self.variables.insert(identifier.clone(), resolved_type.clone());
 
         Ok(Statement::Let {
             identifier,
