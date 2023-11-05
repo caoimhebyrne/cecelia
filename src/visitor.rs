@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 use crate::{
     ast::{Expression, Statement},
     Error, ErrorType,
@@ -14,10 +16,11 @@ pub trait StatementVisitor<T> {
 
             // If the statement is a return statement, stop execution.
             if let Err(Error {
-                error_type: ErrorType::Return(_),
+                error_type: ErrorType::Return(value),
                 ..
             }) = result
             {
+                println!("{} returning: {:?}", "info(visitor):".green(), value);
                 break;
             }
 
