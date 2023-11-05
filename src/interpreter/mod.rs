@@ -60,10 +60,25 @@ impl ExpressionVisitor<Value> for Interpreter {
         let value = match expression {
             Expression::IntegerLiteral(value) => Value::Integer(value),
             Expression::StringLiteral(value) => Value::String(value),
+            Expression::BinaryOperation {
+                left,
+                operator,
+                position,
+                right,
+                ..
+            } => {
+                // Evaluate the left and right expressions.
+                let left = self.visit_expression(*left)?;
+                let right = self.visit_expression(*right)?;
 
-            Expression::Identifier(_, _) => {
-                todo!("Implement interpreter for identifier expressions")
+                // If the binary operation fails, the types are incompatible.
+                left.binary_operation(operator, right.clone()).ok_or(Error::new(
+                    ErrorType::InvalidBinaryOperation(left, operator, right),
+                    position,
+                ))?
             },
+
+            _ => todo!("Implement interpreter for {:?} expressions", expression),
         };
 
         Ok(value)

@@ -1,4 +1,4 @@
-use crate::{position::Position, r#type::Type};
+use crate::{lexer::TokenType, position::Position, r#type::Type};
 
 /// The different types of statements that can be parsed.
 #[derive(Debug, Clone)]
@@ -55,6 +55,24 @@ pub enum Expression {
 
     /// A variable.
     Identifier(Type, Identifier),
+
+    /// A binary operation between two expressions.
+    BinaryOperation {
+        /// The left-hand side of the binary operation.
+        left: Box<Expression>,
+
+        /// The operator of the binary operation.
+        operator: Operator,
+
+        /// The position of the operator in the source code.
+        position: Position,
+
+        /// The right-hand side of the binary operation.
+        right: Box<Expression>,
+
+        /// The type of the binary operation.
+        r#type: Type,
+    },
 }
 
 impl Expression {
@@ -64,6 +82,29 @@ impl Expression {
             Self::IntegerLiteral(_) => Type::Integer,
             Self::StringLiteral(_) => Type::String,
             Self::Identifier(r#type, _) => r#type.clone(),
+            Self::BinaryOperation { left, .. } => left.r#type(),
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Operator {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+}
+
+impl From<TokenType> for Option<Operator> {
+    fn from(val: TokenType) -> Self {
+        let operator = match val {
+            TokenType::Plus => Operator::Add,
+            TokenType::Minus => Operator::Subtract,
+            TokenType::Asterisk => Operator::Multiply,
+            TokenType::Slash => Operator::Divide,
+            _ => return None,
+        };
+
+        Some(operator)
     }
 }

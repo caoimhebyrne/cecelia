@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use colored::Colorize;
 
-use crate::{lexer::TokenType, position::Position, r#type::Type};
+use crate::{ast::Operator, interpreter::value::Value, lexer::TokenType, position::Position, r#type::Type};
 
 pub struct Error {
     pub error_type: ErrorType,
@@ -28,6 +28,7 @@ pub enum ErrorType {
     TypeMismatch(Type, Type),
 
     VariableAlreadyDeclared(String),
+    InvalidBinaryOperation(Value, Operator, Value),
 }
 
 impl Display for ErrorType {
@@ -81,6 +82,14 @@ impl Display for ErrorType {
 
             ErrorType::VariableAlreadyDeclared(name) => {
                 write!(f, "Variable already declared: `{}`", name)
+            },
+
+            ErrorType::InvalidBinaryOperation(left, operator, right) => {
+                write!(
+                    f,
+                    "Invalid binary operation: `{:?}` `{:?}` `{:?}`",
+                    left, operator, right
+                )
             },
         }
     }

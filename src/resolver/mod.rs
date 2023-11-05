@@ -34,6 +34,33 @@ impl ExpressionVisitor<Expression> for TypeResolver {
         match expression {
             Expression::IntegerLiteral(_) => Ok(expression),
             Expression::StringLiteral(_) => Ok(expression),
+
+            Expression::BinaryOperation {
+                left,
+                right,
+                position,
+                operator,
+                ..
+            } => {
+                // If the type is unresolved, and can be resolved, resolve it.
+                let left_type = self.visit_expression(*left.clone())?.r#type();
+                let right_type = self.visit_expression(*right.clone())?.r#type();
+
+                // Ensure that the type of the value matches the type of the variable.
+                // TODO: We could have a way to coerce types / support using a binary operator on different types.
+                if left_type != right_type {
+                    return Err(Error::new(ErrorType::TypeMismatch(left_type, right_type), position));
+                }
+
+                Ok(Expression::BinaryOperation {
+                    left,
+                    operator,
+                    position,
+                    right,
+                    r#type: left_type,
+                })
+            },
+
             Expression::Identifier(r#type, identifier) => {
                 // If the type is unresolved, and can be resolved, resolve it.
                 let resolved_type = Self::resolve_type(r#type.clone(), identifier.position)?;

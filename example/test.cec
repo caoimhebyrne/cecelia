@@ -1,2 +1,3 @@
-let x = "String"
+let x = 4 + 5
+let y = "Hello" + "World"
 return 123

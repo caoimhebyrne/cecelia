@@ -1,4 +1,6 @@
 pub mod node;
+use std::convert::Into;
+
 pub use node::*;
 
 use crate::{
@@ -59,8 +61,50 @@ impl AST {
             TokenType::Identifier(value) => {
                 Expression::Identifier(Type::Unresolved(None), Identifier::new(value, token.position))
             },
-            TokenType::IntegerLiteral(value) => Expression::IntegerLiteral(value),
-            TokenType::StringLiteral(value) => Expression::StringLiteral(value),
+
+            TokenType::IntegerLiteral(value) => {
+                let next_token = self.tokens.peek();
+                let expression = Expression::IntegerLiteral(value);
+
+                // If the next token is an operator, this is a binary operation expression.
+                if let Some(operator) = next_token.and_then(|token| token.token_type.into()) {
+                    self.tokens.consume();
+
+                    let right_expression = self.parse_expression(token.position)?;
+
+                    return Ok(Expression::BinaryOperation {
+                        left: Box::new(expression),
+                        right: Box::new(right_expression),
+                        r#type: Type::default(),
+                        position: token.position,
+                        operator,
+                    });
+                }
+
+                expression
+            },
+
+            TokenType::StringLiteral(value) => {
+                let next_token = self.tokens.peek();
+                let expression = Expression::StringLiteral(value);
+
+                // If the next token is an operator, this is a binary operation expression.
+                if let Some(operator) = next_token.and_then(|token| token.token_type.into()) {
+                    self.tokens.consume();
+
+                    let right_expression = self.parse_expression(token.position)?;
+
+                    return Ok(Expression::BinaryOperation {
+                        left: Box::new(expression),
+                        right: Box::new(right_expression),
+                        r#type: Type::default(),
+                        position: token.position,
+                        operator,
+                    });
+                }
+
+                expression
+            },
 
             // Unable to parse the token as an expression.
             _ => return Err(Error::new(ErrorType::UnexpectedToken(token.token_type), token.position)),

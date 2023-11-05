@@ -8,3 +8,9 @@ pub enum Type {
     Integer,
     String,
 }
+
+impl Default for Type {
+    fn default() -> Self {
+        Self::Unresolved(None)
+    }
+}
