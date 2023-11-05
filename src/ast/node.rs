@@ -98,7 +98,7 @@ impl Expression {
             Self::IntegerLiteral(_) => Type::Integer,
             Self::StringLiteral(_) => Type::String,
             Self::Identifier(r#type, _) => r#type.clone(),
-            Self::BinaryOperation { left, .. } => left.r#type(),
+            Self::BinaryOperation { r#type, .. } => r#type.clone(),
         }
     }
 }

@@ -32,6 +32,7 @@ pub enum ErrorType {
     Return(Option<Value>),
 
     UnknownVariable(String),
+    UnableToInferType,
 }
 
 impl Display for ErrorType {
@@ -101,6 +102,10 @@ impl Display for ErrorType {
 
             ErrorType::UnknownVariable(name) => {
                 write!(f, "`{}` has not been declared yet.", name)
+            },
+
+            ErrorType::UnableToInferType => {
+                write!(f, "Unable to infer type")
             },
         }
     }
