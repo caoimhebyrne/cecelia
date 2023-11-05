@@ -1,6 +1,4 @@
 pub mod node;
-use std::convert::Into;
-
 pub use node::*;
 
 use crate::{
@@ -10,6 +8,7 @@ use crate::{
     stream::Stream,
     Error, ErrorType,
 };
+use std::convert::Into;
 
 pub struct AST {
     tokens: Stream<Token>,
@@ -53,7 +52,8 @@ impl AST {
     /// Parses an expression.
     /// <expression> ::= <identifier> | <literal>
     fn parse_expression(&mut self, last_position: Position) -> Result<Expression, Error> {
-        let Some(token) = self.tokens.consume() else {
+        // We don't consume this as the caller may be able to parse it as a statement in the case that it is not an expression.
+        let Some(token) = self.tokens.peek() else {
             return Err(Error::new(ErrorType::UnexpectedEOF, last_position));
         };
 
@@ -68,6 +68,8 @@ impl AST {
             // Unable to parse the token as an expression.
             _ => return Err(Error::new(ErrorType::UnexpectedToken(token.token_type), token.position)),
         };
+
+        self.tokens.consume();
 
         // If the next token is an operator, this is a binary operation expression.
         let next_token = self.tokens.peek();
