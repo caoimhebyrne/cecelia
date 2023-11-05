@@ -37,7 +37,7 @@ enum Command {
 fn main() -> Result<(), std::io::Error> {
     let args = Args::parse();
 
-    let input = match args.file {
+    let input = match &args.file {
         Some(value) => fs::read_to_string(value)?,
         None => {
             eprintln!("{}: No input file specified!", "error".red());
@@ -45,67 +45,54 @@ fn main() -> Result<(), std::io::Error> {
         },
     };
 
-    match args.command {
-        Some(Command::Lex) => lex(input),
-        Some(Command::Parse) => parse(input),
-        Some(Command::Check) => check(input),
-        None => compile(input),
+    let result = match args.command {
+        Some(Command::Lex) => lex(input.clone()),
+        Some(Command::Parse) => parse(input.clone()),
+        Some(Command::Check) => check(input.clone()),
+        None => compile(input.clone()),
+    };
+
+    if let Err(error) = result {
+        error.print_error(input);
+        exit(-1);
     }
 
     Ok(())
 }
 
-fn lex(input: String) {
+fn lex(input: String) -> Result<(), Error> {
     let mut lexer = Lexer::new(input.clone());
-    let tokens = lexer.parse();
-    match tokens {
-        Ok(value) => println!("{:#?}", value),
-        Err(error) => error.print_error(input),
-    }
+    let tokens = lexer.parse()?;
+
+    println!("{:#?}", tokens);
+    Ok(())
 }
 
-fn parse(input: String) {
+fn parse(input: String) -> Result<(), Error> {
     let mut lexer = Lexer::new(input.clone());
-    let tokens = lexer.parse();
-    match tokens {
-        Ok(value) => {
-            let mut ast = AST::new(value);
-            let statements = ast.parse();
-            match statements {
-                Ok(value) => println!("{:#?}", value),
-                Err(error) => error.print_error(input),
-            }
-        },
-        Err(error) => error.print_error(input),
-    }
+    let tokens = lexer.parse()?;
+
+    let mut ast = AST::new(tokens);
+    let statements = ast.parse()?;
+
+    println!("{:#?}", statements);
+    Ok(())
 }
 
-fn check(input: String) {
+fn check(input: String) -> Result<(), Error> {
     let mut lexer = Lexer::new(input.clone());
-    let tokens = lexer.parse();
-    match tokens {
-        Ok(value) => {
-            let mut ast = AST::new(value);
-            let statements = ast.parse();
-            match statements {
-                Ok(value) => {
-                    let mut resolver = TypeResolver::default();
-                    let resolved = resolver.visit_statements(value);
-                    match resolved {
-                        Ok(_values) => println!(
-                            "{}: resolved types and checked for errors",
-                            "success".to_string().green(),
-                        ),
-                        Err(error) => error.print_error(input),
-                    }
-                },
-                Err(error) => error.print_error(input),
-            }
-        },
-        Err(error) => error.print_error(input),
-    }
+    let tokens = lexer.parse()?;
+
+    let mut ast = AST::new(tokens);
+    let statements = ast.parse()?;
+
+    let mut resolver = TypeResolver::default();
+    resolver.visit_statements(statements)?;
+
+    println!("{}: No errors found!", "success".green());
+    Ok(())
 }
 
-fn compile(_: String) {
+fn compile(_: String) -> Result<(), Error> {
     todo!("Not implemented!")
 }
