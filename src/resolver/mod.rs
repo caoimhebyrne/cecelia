@@ -23,7 +23,7 @@ impl StatementVisitor<Statement> for TypeResolver {
             } => self.visit_let_statement(identifier, value, r#type, position),
 
             Statement::Return { value, position } => {
-                let value = value.map(|value| self.visit_expression(&value)).transpose()?;
+                let value = value.map(|value| self.visit_expression(value)).transpose()?;
                 Ok(Statement::Return { value, position })
             },
         }
@@ -31,9 +31,9 @@ impl StatementVisitor<Statement> for TypeResolver {
 }
 
 impl ExpressionVisitor<Expression> for TypeResolver {
-    fn visit_expression(&mut self, expression: &Expression) -> Result<Expression, Error> {
+    fn visit_expression(&mut self, expression: Expression) -> Result<Expression, Error> {
         match expression {
-            Expression::IntegerLiteral(value) => Ok(Expression::IntegerLiteral(*value)),
+            Expression::IntegerLiteral(value) => Ok(Expression::IntegerLiteral(value.clone())),
             Expression::StringLiteral(value) => Ok(Expression::StringLiteral(value.clone())),
             Expression::Identifier(r#type, identifier) => {
                 // If the type is unresolved, and can be resolved, resolve it.
@@ -53,7 +53,7 @@ impl TypeResolver {
         position: Position,
     ) -> Result<Statement, Error> {
         // First, resolve the type of the value.
-        let value = self.visit_expression(&value)?;
+        let value = self.visit_expression(value)?;
 
         // If the type is unresolved, and can be resolved, resolve it.
         let mut resolved_type = Self::resolve_type(r#type, position)?;

@@ -16,5 +16,5 @@ pub trait StatementVisitor<T> {
 
 pub trait ExpressionVisitor<T> {
     /// Visits an expression
-    fn visit_expression(&mut self, expression: &Expression) -> Result<T, Error>;
+    fn visit_expression(&mut self, expression: Expression) -> Result<T, Error>;
 }
