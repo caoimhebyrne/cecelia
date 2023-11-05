@@ -29,6 +29,7 @@ pub enum ErrorType {
 
     VariableAlreadyDeclared(String),
     InvalidBinaryOperation(Value, Operator, Value),
+    Return(Option<Value>),
 }
 
 impl Display for ErrorType {
@@ -90,6 +91,10 @@ impl Display for ErrorType {
                     "Invalid binary operation: `{:?}` `{:?}` `{:?}`",
                     left, operator, right
                 )
+            },
+
+            ErrorType::Return(_) => {
+                write!(f, "INTERAL WORKAROUND")
             },
         }
     }

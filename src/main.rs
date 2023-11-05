@@ -13,7 +13,7 @@ pub use error::*;
 use ast::*;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
-use interpreter::Interpreter;
+use interpreter::{value::Value, Interpreter};
 use lexer::*;
 use resolver::*;
 use std::{fs, process::exit};
@@ -107,7 +107,20 @@ fn execute(input: String) -> Result<(), Error> {
     statements = resolver.visit_statements(statements)?;
 
     let mut interpreter = Interpreter::default();
-    interpreter.visit_statements(statements)?;
+    interpreter.visit_statements(statements).map_err(|err| match err {
+        Error {
+            error_type: ErrorType::Return(value),
+            ..
+        } => {
+            if let Some(Value::Integer(value)) = value {
+                exit(value);
+            }
+
+            exit(0);
+        },
+
+        err => err,
+    })?;
 
     interpreter.print_variables();
     Ok(())

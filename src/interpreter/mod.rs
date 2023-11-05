@@ -7,7 +7,6 @@ use crate::{
     resolver::{ExpressionVisitor, StatementVisitor},
     Error, ErrorType,
 };
-use colored::Colorize;
 use value::*;
 
 #[derive(Default)]
@@ -43,13 +42,9 @@ impl StatementVisitor<()> for Interpreter {
                 Ok(())
             },
 
-            Statement::Return { .. } => {
-                println!(
-                    "{}",
-                    "TODO: Implement interpreter for return statements".to_string().yellow()
-                );
-
-                Ok(())
+            Statement::Return { value, position } => {
+                let value = value.map(|it| self.visit_expression(it)).transpose()?;
+                Err(Error::new(ErrorType::Return(value), position))
             },
         }
     }
