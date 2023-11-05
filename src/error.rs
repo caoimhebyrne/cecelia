@@ -26,6 +26,8 @@ pub enum ErrorType {
     UnableToResolveType(String),
 
     TypeMismatch(Type, Type),
+
+    VariableAlreadyDeclared(String),
 }
 
 impl Display for ErrorType {
@@ -76,6 +78,10 @@ impl Display for ErrorType {
             },
 
             ErrorType::UnexpectedEOF => write!(f, "Unexpected EOF"),
+
+            ErrorType::VariableAlreadyDeclared(name) => {
+                write!(f, "Variable already declared: `{}`", name)
+            },
         }
     }
 }

@@ -28,7 +28,7 @@ pub enum Statement {
 }
 
 /// Represents the name of a variable, function, etc.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Identifier {
     /// The name of the identifier.
     pub name: String,

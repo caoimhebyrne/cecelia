@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Default, PartialEq, Eq, Copy)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Copy, Hash)]
 pub struct Position {
     pub x: usize,
     pub y: usize,

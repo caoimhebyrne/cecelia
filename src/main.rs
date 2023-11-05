@@ -1,5 +1,6 @@
 pub mod ast;
 pub mod error;
+pub mod interpreter;
 pub mod lexer;
 pub mod position;
 pub mod resolver;
@@ -12,6 +13,7 @@ pub use error::*;
 use ast::*;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
+use interpreter::Interpreter;
 use lexer::*;
 use resolver::*;
 use std::{fs, process::exit};
@@ -50,7 +52,7 @@ fn main() -> Result<(), std::io::Error> {
         Some(Command::Lex) => lex(input.clone()),
         Some(Command::Parse) => parse(input.clone()),
         Some(Command::Check) => check(input.clone()),
-        None => compile(input.clone()),
+        None => execute(input.clone()),
     };
 
     if let Err(error) = result {
@@ -94,6 +96,19 @@ fn check(input: String) -> Result<(), Error> {
     Ok(())
 }
 
-fn compile(_: String) -> Result<(), Error> {
-    todo!("Not implemented!")
+fn execute(input: String) -> Result<(), Error> {
+    let mut lexer = Lexer::new(input.clone());
+    let tokens = lexer.parse()?;
+
+    let mut ast = AST::new(tokens);
+    let mut statements = ast.parse()?;
+
+    let mut resolver = TypeResolver::default();
+    statements = resolver.visit_statements(statements)?;
+
+    let mut interpreter = Interpreter::default();
+    interpreter.visit_statements(statements)?;
+
+    interpreter.print_variables();
+    Ok(())
 }
