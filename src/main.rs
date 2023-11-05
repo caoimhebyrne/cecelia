@@ -5,14 +5,15 @@ pub mod position;
 pub mod resolver;
 pub mod stream;
 pub mod r#type;
+pub mod visitor;
 
 pub use error::*;
 
-use ast::AST;
+use ast::*;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 use lexer::*;
-use resolver::{StatementVisitor, TypeResolver};
+use resolver::*;
 use std::{fs, process::exit};
 use stream::*;
 

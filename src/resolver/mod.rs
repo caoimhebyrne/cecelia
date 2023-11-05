@@ -1,5 +1,4 @@
-pub mod visitor;
-pub use visitor::*;
+pub use crate::visitor::*;
 
 use crate::{
     ast::{Expression, Identifier, Statement},
