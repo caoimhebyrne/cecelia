@@ -54,5 +54,16 @@ pub enum Expression {
     StringLiteral(String),
 
     /// A variable.
-    Identifier(Identifier),
+    Identifier(Type, Identifier),
+}
+
+impl Expression {
+    /// Returns the type of the expression.
+    pub fn r#type(&self) -> Type {
+        match self {
+            Self::IntegerLiteral(_) => Type::Integer,
+            Self::StringLiteral(_) => Type::String,
+            Self::Identifier(r#type, _) => r#type.clone(),
+        }
+    }
 }

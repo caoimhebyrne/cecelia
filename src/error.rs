@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use colored::Colorize;
 
-use crate::{lexer::TokenType, position::Position};
+use crate::{lexer::TokenType, position::Position, r#type::Type};
 
 pub struct Error {
     pub error_type: ErrorType,
@@ -19,9 +19,13 @@ pub enum ErrorType {
     UnexpectedToken(TokenType),
     ExpectedToken(TokenType),
     ExpectedAnyIdentifier,
+    ExpectedType(Type, Type),
 
     UnableToParseStatement(TokenType),
     UnableToParseExpression(TokenType),
+    UnableToResolveType(String),
+
+    TypeMismatch(Type, Type),
 }
 
 impl Display for ErrorType {
@@ -51,12 +55,24 @@ impl Display for ErrorType {
                 write!(f, "Expected any identifier")
             },
 
+            ErrorType::ExpectedType(expected, actual) => {
+                write!(f, "Expected type: `{:?}` but got `{:?}`", expected, actual)
+            },
+
+            ErrorType::TypeMismatch(expected, actual) => {
+                write!(f, "Type mismatch: `{:?}` and `{:?}`", expected, actual)
+            },
+
             ErrorType::UnableToParseStatement(token) => {
                 write!(f, "Unable to parse statement: {:?}", token)
             },
 
             ErrorType::UnableToParseExpression(token) => {
                 write!(f, "Unable to parse expression: {:?}", token)
+            },
+
+            ErrorType::UnableToResolveType(type_name) => {
+                write!(f, "Unable to resolve type: `{}`", type_name)
             },
 
             ErrorType::UnexpectedEOF => write!(f, "Unexpected EOF"),

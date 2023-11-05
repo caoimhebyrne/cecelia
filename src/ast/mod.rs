@@ -56,7 +56,9 @@ impl AST {
         };
 
         let expression = match token.token_type {
-            TokenType::Identifier(value) => Expression::Identifier(Identifier::new(value, token.position)),
+            TokenType::Identifier(value) => {
+                Expression::Identifier(Type::Unresolved(None), Identifier::new(value, token.position))
+            },
             TokenType::IntegerLiteral(value) => Expression::IntegerLiteral(value),
             TokenType::StringLiteral(value) => Expression::StringLiteral(value),
 
@@ -99,7 +101,7 @@ impl AST {
             identifier,
             value,
             r#type,
-            position: last_position,
+            position: token.position,
         })
     }
 
