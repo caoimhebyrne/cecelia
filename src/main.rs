@@ -87,12 +87,14 @@ fn check(input: String) -> Result<(), Error> {
     let tokens = lexer.parse()?;
 
     let mut ast = AST::new(tokens);
-    let statements = ast.parse()?;
+    let mut statements = ast.parse()?;
 
     let mut resolver = TypeResolver::default();
-    resolver.visit_statements(statements)?;
+    statements = resolver.visit_statements(statements)?;
 
     println!("{}: No errors found!", "success".green());
+    println!("{:#?}", statements);
+
     Ok(())
 }
 

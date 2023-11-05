@@ -30,6 +30,13 @@ impl<T: Clone> Stream<T> {
 
         element
     }
+
+    pub fn unconsume(&mut self) {
+        if self.index > 0 {
+            self.index -= 1;
+            self.visual_index -= 1;
+        }
+    }
 }
 
 impl<T: Clone> From<Vec<T>> for Stream<T> {

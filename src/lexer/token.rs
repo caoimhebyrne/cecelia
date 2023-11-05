@@ -2,12 +2,15 @@ use crate::position::Position;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenType {
-    Equals,   // =
-    Plus,     // +
-    Minus,    // -
-    Asterisk, // *
-    Slash,    // /
-    Colon,    // :
+    Equals,           // =
+    Plus,             // +
+    Minus,            // -
+    Asterisk,         // *
+    Slash,            // /
+    Colon,            // :
+    OpenParenthesis,  // (
+    CloseParenthesis, // )
+    Comma,            // ,
 
     Keyword(Keyword),
     Identifier(String),

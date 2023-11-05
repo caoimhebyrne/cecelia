@@ -58,23 +58,74 @@ impl AST {
     /// <expression> ::= <identifier> | <literal>
     fn parse_expression(&mut self, last_position: Position) -> Result<Expression, Error> {
         // We don't consume this as the caller may be able to parse it as a statement in the case that it is not an expression.
-        let Some(token) = self.tokens.peek() else {
+        let Some(token) = self.tokens.consume() else {
             return Err(Error::new(ErrorType::UnexpectedEOF, last_position));
         };
 
         let expression = match token.token_type {
             TokenType::Identifier(value) => {
-                Expression::Identifier(Type::Unresolved(None), Identifier::new(value, token.position))
+                let identifier = Identifier::new(value, token.position);
+
+                // We need to check if the next token is an open parenthesis.
+                let next_token = self.tokens.peek();
+
+                if let Some(Token {
+                    token_type: TokenType::OpenParenthesis,
+                    ..
+                }) = next_token
+                {
+                    // This is a function call.
+                    self.tokens.consume();
+
+                    let mut arguments = vec![];
+                    loop {
+                        let next_token = self.tokens.peek();
+
+                        if let Some(Token {
+                            token_type: TokenType::CloseParenthesis,
+                            ..
+                        }) = next_token
+                        {
+                            self.tokens.consume();
+                            break;
+                        }
+
+                        let argument = self.parse_expression(token.position)?;
+                        arguments.push(argument);
+
+                        let next_token = self.tokens.peek();
+
+                        if let Some(Token {
+                            token_type: TokenType::Comma,
+                            ..
+                        }) = next_token
+                        {
+                            self.tokens.consume();
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    return Ok(Expression::FunctionCall {
+                        identifier,
+                        arguments,
+                        r#type: Type::default(),
+                    });
+                }
+
+                Expression::Identifier(Type::Unresolved(None), identifier)
             },
 
             TokenType::IntegerLiteral(value) => Expression::IntegerLiteral(value),
+
             TokenType::StringLiteral(value) => Expression::StringLiteral(value),
 
             // Unable to parse the token as an expression.
-            _ => return Err(Error::new(ErrorType::UnexpectedToken(token.token_type), token.position)),
+            _ => {
+                self.tokens.unconsume();
+                return Err(Error::new(ErrorType::UnexpectedToken(token.token_type), token.position));
+            },
         };
-
-        self.tokens.consume();
 
         // If the next token is an operator, this is a binary operation expression.
         let next_token = self.tokens.peek();

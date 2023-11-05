@@ -1,9 +1,22 @@
+use std::fmt::Display;
+
 use crate::ast::Operator;
 
 #[derive(Debug, Clone)]
 pub enum Value {
     Integer(i32),
     String(String),
+    Void,
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Value::Integer(value) => write!(f, "{}", value),
+            Value::String(value) => write!(f, "{}", value),
+            Value::Void => write!(f, "void"),
+        }
+    }
 }
 
 impl Value {

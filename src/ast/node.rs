@@ -92,6 +92,18 @@ pub enum Expression {
         /// The type of the binary operation.
         r#type: Type,
     },
+
+    /// A function call.
+    FunctionCall {
+        /// The identifier of the function.
+        identifier: Identifier,
+
+        /// The arguments of the function.
+        arguments: Vec<Expression>,
+
+        /// The return type of the function call.
+        r#type: Type,
+    },
 }
 
 impl Expression {
@@ -102,6 +114,7 @@ impl Expression {
             Self::StringLiteral(_) => Type::String,
             Self::Identifier(r#type, _) => r#type.clone(),
             Self::BinaryOperation { r#type, .. } => r#type.clone(),
+            Self::FunctionCall { r#type, .. } => r#type.clone(),
         }
     }
 }

@@ -91,6 +91,19 @@ impl ExpressionVisitor<Expression> for TypeResolver {
 
                 Ok(Expression::Identifier(resolved_type, identifier))
             },
+
+            Expression::FunctionCall {
+                identifier,
+                arguments,
+                r#type,
+            } => Ok(Expression::FunctionCall {
+                identifier,
+                arguments: arguments
+                    .iter()
+                    .map(|it| self.visit_expression(it.clone()))
+                    .collect::<Result<Vec<_>, _>>()?,
+                r#type,
+            }),
         }
     }
 }

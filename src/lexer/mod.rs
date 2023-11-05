@@ -30,6 +30,9 @@ impl Lexer {
                 '-' => self.token(TokenType::Minus),
                 '*' => self.token(TokenType::Asterisk),
                 ':' => self.token(TokenType::Colon),
+                '(' => self.token(TokenType::OpenParenthesis),
+                ')' => self.token(TokenType::CloseParenthesis),
+                ',' => self.token(TokenType::Comma),
 
                 '\n' => {
                     self.line += 1;

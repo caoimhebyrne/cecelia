@@ -88,6 +88,35 @@ impl ExpressionVisitor<Value> for Interpreter {
                     ))?
                     .clone()
             },
+
+            Expression::FunctionCall {
+                identifier, arguments, ..
+            } => {
+                // TODO: Allow for custom functions.
+
+                let mut evaluated_arguments = Vec::new();
+                for argument in arguments {
+                    evaluated_arguments.push(self.visit_expression(argument)?);
+                }
+
+                // If the function is not a built-in function, throw an error.
+                if identifier.name != "print" {
+                    return Err(Error::new(
+                        ErrorType::UnknownFunction(identifier.name),
+                        identifier.position,
+                    ));
+                }
+
+                let mut output_string = String::new();
+
+                for argument in evaluated_arguments {
+                    output_string.push_str(&argument.to_string());
+                }
+
+                println!("{}", output_string);
+
+                Value::Void
+            },
         };
 
         Ok(value)
