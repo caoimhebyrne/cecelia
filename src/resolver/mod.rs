@@ -33,8 +33,8 @@ impl StatementVisitor<Statement> for TypeResolver {
 impl ExpressionVisitor<Expression> for TypeResolver {
     fn visit_expression(&mut self, expression: Expression) -> Result<Expression, Error> {
         match expression {
-            Expression::IntegerLiteral(value) => Ok(Expression::IntegerLiteral(value)),
-            Expression::StringLiteral(value) => Ok(Expression::StringLiteral(value.clone())),
+            Expression::IntegerLiteral(_) => Ok(expression),
+            Expression::StringLiteral(_) => Ok(expression),
             Expression::Identifier(r#type, identifier) => {
                 // If the type is unresolved, and can be resolved, resolve it.
                 let resolved_type = Self::resolve_type(r#type.clone(), identifier.position)?;
