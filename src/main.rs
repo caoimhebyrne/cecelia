@@ -1,10 +1,13 @@
+pub mod ast;
 pub mod error;
 pub mod lexer;
 pub mod position;
 pub mod stream;
+pub mod r#type;
 
 pub use error::*;
 
+use ast::AST;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 use lexer::*;
@@ -57,8 +60,20 @@ fn lex(input: String) {
     }
 }
 
-fn parse(_: String) {
-    todo!("Not implemented!")
+fn parse(input: String) {
+    let mut lexer = Lexer::new(input.clone());
+    let tokens = lexer.parse();
+    match tokens {
+        Ok(value) => {
+            let mut ast = AST::new(value);
+            let statements = ast.parse();
+            match statements {
+                Ok(value) => println!("{:#?}", value),
+                Err(error) => error.print_error(input),
+            }
+        },
+        Err(error) => error.print_error(input),
+    }
 }
 
 fn compile(_: String) {

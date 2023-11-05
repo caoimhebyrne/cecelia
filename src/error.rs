@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use colored::Colorize;
 
-use crate::position::Position;
+use crate::{lexer::TokenType, position::Position};
 
 pub struct Error {
     pub error_type: ErrorType,
@@ -10,9 +10,18 @@ pub struct Error {
 }
 
 pub enum ErrorType {
+    UnexpectedEOF,
+
     UnexpectedCharacter(char),
     ExpectedCharacter(char),
     InvalidNumber(String),
+
+    UnexpectedToken(TokenType),
+    ExpectedToken(TokenType),
+    ExpectedAnyIdentifier,
+
+    UnableToParseStatement(TokenType),
+    UnableToParseExpression(TokenType),
 }
 
 impl Display for ErrorType {
@@ -29,6 +38,28 @@ impl Display for ErrorType {
             ErrorType::ExpectedCharacter(char) => {
                 write!(f, "Expected character: {}", char)
             },
+
+            ErrorType::UnexpectedToken(token) => {
+                write!(f, "Unexpected token: {:?}", token)
+            },
+
+            ErrorType::ExpectedToken(token) => {
+                write!(f, "Expected token: {:?}", token)
+            },
+
+            ErrorType::ExpectedAnyIdentifier => {
+                write!(f, "Expected any identifier")
+            },
+
+            ErrorType::UnableToParseStatement(token) => {
+                write!(f, "Unable to parse statement: {:?}", token)
+            },
+
+            ErrorType::UnableToParseExpression(token) => {
+                write!(f, "Unable to parse expression: {:?}", token)
+            },
+
+            ErrorType::UnexpectedEOF => write!(f, "Unexpected EOF"),
         }
     }
 }

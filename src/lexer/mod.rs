@@ -1,7 +1,7 @@
 pub mod token;
+pub use token::*;
 
 use crate::{position::Position, Error, ErrorType, Stream};
-use token::*;
 
 pub struct Lexer {
     stream: Stream<char>,
