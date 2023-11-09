@@ -1,6 +1,6 @@
 ## cecelia
 
-A very simple "programming language" which compiles to aarch64 assembly.
+A very simple hobby scripting language, designed for ease-of-use and type-safety.
 
 ### Usage
 
@@ -14,19 +14,6 @@ let y: Integer = 6
 
 // A top-level return statement will be treated as the process' exit code.
 return x + y
-```
-
-**Equivalent aarch64 `.S` file**:
-
-```S
-.global _start
-.align 2
-
-_start:
-        mov     w0, 5
-        mov     w1, 4
-        add     w0, w1, w0
-        ret
 ```
 
 ### License
